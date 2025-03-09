@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { getWordDefinition, getSynonyms } from './oxfordApi';  // Import both functions
+import { getWordDefinition, getSynonyms } from './wordnikApi.js'; // Correct import path
 
 const Home = () => {
   const [word, setWord] = useState('');
@@ -10,20 +10,23 @@ const Home = () => {
 
   const handleSearch = async () => {
     if (word.trim()) {
-      setError('');
-      const data = await getWordDefinition(word.trim());
-      if (data && data.results && data.results.length > 0) {
-        const definition = data.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0];
-        setDefinition(definition);
+      setError(''); // Clear any previous errors
+      setDefinition(null); // Reset definition
+      setSynonyms(null); // Reset synonyms
 
-        // Fetch synonyms as well
-        const synonyms = await getSynonyms(word.trim());
-        setSynonyms(synonyms);
+      // Fetch the word definition
+      const definitionData = await getWordDefinition(word.trim());
+      if (definitionData) {
+        setDefinition(definitionData);
       } else {
         setError('Word not found.');
         setDefinition(null);
         setSynonyms(null);
       }
+
+      // Fetch synonyms
+      const synonymsData = await getSynonyms(word.trim());
+      setSynonyms(synonymsData);
     } else {
       setError('Please enter a word.');
     }
@@ -31,7 +34,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Oxford Dictionary Search</Text>
+      <Text style={styles.header}>Wordnik Dictionary Search</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter a word"
@@ -39,6 +42,7 @@ const Home = () => {
         onChangeText={setWord}
       />
       <Button title="Search" onPress={handleSearch} />
+
       {definition && <Text style={styles.result}>Definition: {definition}</Text>}
       {synonyms && <Text style={styles.result}>Synonyms: {synonyms}</Text>}
       {error && <Text style={styles.error}>{error}</Text>}
